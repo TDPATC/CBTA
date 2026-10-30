@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TPDM Process Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: control bar on top, swimlane board in its own horizontal scroller, step detail + legend below */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --fg:#17202e; --muted:#5a6578; --line:#d5dae2; --edge:#3b4555;
+  --accent:#1f2d4d; --accent-fg:#ffffff;
+  --act-bd:#7d97c7; --gate-bg:#fff1c9; --gate-bd:#d6a82a; --sign-bg:#fff1c9; --sign-bd:#d99a12;
+  --term-bg:#1f2d4d; --term-fg:#ffffff; --note-bg:#f1f2f4;
+  --ph-start:#1f2d4d; --ph-1:#2a4b7f; --ph-2:#2f6b5f; --ph-3:#7a4e15; --ph-5t:#5b3a75; --ph-4:#3b6a2c; --ph-5:#7a2a3b;
+  --ln-cd:#dce8fb; --ln-sme:#dcefd8; --ln-dm:#fde5cc; --ln-am:#e7dcef; --ln-cs:#f6d4d4; --ln-ta:#eeeff1;
+  --ln-cd-b:#7d97c7; --ln-sme-b:#7fb26e; --ln-dm-b:#d9a03c; --ln-am-b:#9a7bb8; --ln-cs-b:#d36b6b; --ln-ta-b:#9aa1ab;
+  --sel:#2563eb; --ok:#2f8a4e; --ok-soft:#dff1e5; --now:#e0731a; --now-soft:#fde9d7; --jump:#2f64b8;
+  --f-ui:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-head:"Barlow Semi Condensed","Barlow",system-ui,sans-serif;
+  --f-code:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10141b; --surface:#171c25; --fg:#e7ebf2; --muted:#9aa4b5; --line:#2b3340; --edge:#aab3c2;
+  --accent:#c9d6f2; --accent-fg:#10141b;
+  --act-bd:#5d79ab; --gate-bg:#3a3018; --gate-bd:#c9971f; --sign-bg:#3a3018; --sign-bd:#d99a12;
+  --term-bg:#c9d6f2; --term-fg:#10141b; --note-bg:#20262f;
+  --ln-cd:#18233a; --ln-sme:#17281b; --ln-dm:#2e2214; --ln-am:#251c2e; --ln-cs:#2e1a1c; --ln-ta:#1d2129;
+  --sel:#7aa7ff; --ok:#5cc07f; --ok-soft:#173022; --now:#ff9a4a; --now-soft:#3a2414; --jump:#7aa7ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141b; --surface:#171c25; --fg:#e7ebf2; --muted:#9aa4b5; --line:#2b3340; --edge:#aab3c2;
+  --accent:#c9d6f2; --accent-fg:#10141b;
+  --act-bd:#5d79ab; --gate-bg:#3a3018; --gate-bd:#c9971f; --sign-bg:#3a3018; --sign-bd:#d99a12;
+  --term-bg:#c9d6f2; --term-fg:#10141b; --note-bg:#20262f;
+  --ln-cd:#18233a; --ln-sme:#17281b; --ln-dm:#2e2214; --ln-am:#251c2e; --ln-cs:#2e1a1c; --ln-ta:#1d2129;
+  --sel:#7aa7ff; --ok:#5cc07f; --ok-soft:#173022; --now:#ff9a4a; --now-soft:#3a2414; --jump:#7aa7ff; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px;max-width:1600px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.eyebrow{font-family:var(--f-code);font-size:12px;color:var(--muted);letter-spacing:.02em}
+h1{font-family:var(--f-head);font-weight:700;font-size:clamp(22px,3vw,30px);line-height:1.15;margin:2px 0 0;text-wrap:balance}
+.src{color:var(--muted);font-size:13px;margin-top:4px}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{font:600 14px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;border:0;background:transparent;color:var(--muted);padding:10px 16px;border-radius:7px;cursor:pointer}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.seg button:focus-visible,.chip:focus-visible,.zoom button:focus-visible,.node:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 12px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:#fff;border:0;border-radius:999px;padding:7px 12px;cursor:pointer}
+.zoom{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.zoom button{width:30px;height:30px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:7px;font:600 16px/1 var(--f-ui);cursor:pointer}
+.zoom output{font-family:var(--f-code);min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.board-wrap{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:78vh}
+.board{position:relative}
+.phrow{display:flex;position:sticky;top:0;z-index:4;background:var(--surface)}
+.corner{position:sticky;left:0;z-index:5;flex:0 0 var(--lw);background:var(--surface);border-right:1px solid var(--line)}
+.ph{flex:0 0 auto;height:40px;display:flex;align-items:center;justify-content:center;color:#fff;font:700 13px/1 var(--f-head);letter-spacing:.09em;text-transform:uppercase;border-right:2px solid var(--surface)}
+.lane{display:flex;border-top:1px solid var(--lb)}
+.lane-label{position:sticky;left:0;z-index:3;flex:0 0 var(--lw);background:var(--lbg);border-right:1px solid var(--lb);display:flex;align-items:center;padding:0 12px;font:700 13px/1.2 var(--f-head);letter-spacing:.02em}
+.lane-track{flex:0 0 auto}
+.overlay{position:absolute;left:0;top:0;pointer-events:none}
+.overlay .node{pointer-events:auto}
+svg.edges{position:absolute;left:0;top:0;overflow:visible}
+.edge{fill:none;stroke:var(--edge);stroke-width:1.4}
+.edge.dash{stroke-dasharray:4 4}
+.divider{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:9 7;opacity:.55}
+.elabel{font:600 11.5px var(--f-ui);fill:var(--fg);paint-order:stroke;stroke:var(--surface);stroke-width:4px}
+.node{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px 10px;font-size:12px;line-height:1.3;color:var(--fg);cursor:pointer;border:0;background:none;font-family:var(--f-ui)}
+.node b{font-weight:700;font-size:12.5px}
+.node .sub{color:var(--muted);font-size:11.5px}
+.node.activity{background:var(--surface);border:1.4px solid var(--act-bd);border-radius:9px}
+.node.sign{background:var(--sign-bg);border:2px solid var(--sign-bd);border-radius:12px}
+.node.terminal{background:var(--term-bg);color:var(--term-fg);border-radius:40px}
+.node.terminal .sub{color:var(--term-fg);opacity:.85}
+.node.note{background:var(--note-bg);border:1.2px dashed var(--muted);border-radius:4px;align-items:flex-start;text-align:left}
+.node.gate,.node.decision{padding:6px 22px}
+.node svg.shape{position:absolute;inset:0;width:100%;height:100%;z-index:-1;overflow:visible}
+.node.gate svg polygon{fill:var(--gate-bg);stroke:var(--gate-bd);stroke-width:1.6}
+.node.decision svg polygon{fill:var(--surface);stroke:var(--edge);stroke-width:1.4}
+.node.decision{font-size:11.5px}
+.node[aria-pressed="true"]{box-shadow:0 0 0 3px var(--sel)}
+.node.gate[aria-pressed="true"],.node.decision[aria-pressed="true"]{box-shadow:none}
+.node.gate[aria-pressed="true"] svg polygon,.node.decision[aria-pressed="true"] svg polygon{stroke:var(--sel);stroke-width:3}
+.empty{padding:48px 24px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:6px;align-items:center}
+.empty strong{font-family:var(--f-head);font-size:20px;color:var(--fg)}
+.below{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.below{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.panel h2{font:700 12px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.detail-title{font-family:var(--f-head);font-weight:700;font-size:20px;line-height:1.2;margin:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:12px 0 0;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.code{font-family:var(--f-code);font-size:12.5px}
+.navbtns{display:flex;gap:8px;margin-top:14px}
+.navbtns button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:8px 10px;font:600 13px var(--f-ui);cursor:pointer}
+.navbtns button:disabled{opacity:.4;cursor:default}
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:13.5px}
+.legend li{display:flex;align-items:center;gap:10px}
+.sw{flex:0 0 34px;height:20px;display:inline-block}
+.forms{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:13.5px}
+.forms li{display:grid;grid-template-columns:52px 1fr;gap:8px}
+.forms .code{color:var(--muted)}
+
+
+.fnote{margin-top:8px;font-size:13.5px;max-width:78ch;border-left:3px solid var(--jump);padding:4px 0 4px 10px;color:var(--fg)}
+.bandrow{display:flex;background:var(--bg)}
+.bandrow .lane-label{background:var(--bg);color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;border-right:1px solid var(--line)}
+.edge.jump{stroke:var(--jump);stroke-width:1.8}
+.edge.off{opacity:.18}
+.elabel.off{opacity:.3}
+.node.skipped{opacity:.2}
+.pill.skip{background:var(--line);color:var(--muted)}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.choices .btn{border-color:var(--ok);color:var(--ok);font-weight:700}
+
+.apv{position:absolute;display:flex;justify-content:center;gap:4px;pointer-events:auto;z-index:2}
+.ap{display:inline-flex;align-items:center;gap:4px;font:600 10.5px/1 var(--f-ui);color:var(--fg);background:var(--surface);border:1.2px solid var(--sign-bd);border-radius:99px;padding:2px 8px 2px 4px;cursor:pointer;white-space:nowrap}
+.ap input{margin:0;width:12px;height:12px;accent-color:var(--ok);cursor:pointer}
+.ap.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.ap.dis{opacity:.45;cursor:default}
+.ap.on.dis{opacity:1}
+.ap.dis input{cursor:default}
+.aplist{margin-top:14px;display:grid;gap:8px}
+.aprow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border:1px solid var(--sign-bd);border-radius:9px;background:var(--sign-bg)}
+.aprow.on{border-color:var(--ok);background:var(--ok-soft)}
+.aprow label{display:flex;align-items:center;gap:8px;cursor:pointer;flex:1 1 auto}
+.aprow input[type=checkbox]{width:18px;height:18px;accent-color:var(--ok)}
+.apname{flex:1 1 160px;font:14px var(--f-ui);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 9px;min-width:0}
+.aptag{font:700 10px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase;background:var(--sign-bg);color:var(--fg);border:1px solid var(--sign-bd);border-radius:99px;padding:3px 6px;margin-right:6px}
+/* progress tracking */
+.coursebar{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px 24px;align-items:center}
+@media (max-width:800px){.coursebar{grid-template-columns:1fr}}
+.cfields{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.cfields label{font:700 12px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cfields select,.cfields input{font:500 14px var(--f-ui);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.cfields select{max-width:220px}
+.cfields input{flex:1 1 160px}
+.btn{font:600 13px var(--f-ui);border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.warn{border-color:#c0392b;color:#c0392b}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.prog{display:flex;flex-direction:column;gap:8px;min-width:0}
+.progtop{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;align-items:baseline;font-size:14px}
+.progtop strong{font-family:var(--f-head);font-size:18px;font-variant-numeric:tabular-nums}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+.bar span{display:block;height:100%}
+.nextline{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.nextline .tag{font:700 11px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase;background:var(--now-soft);color:var(--now);padding:5px 8px;border-radius:99px}
+.node.done{border-color:var(--ok)!important}
+.node.done::after{content:"✓";position:absolute;top:-9px;right:-9px;width:22px;height:22px;border-radius:50%;background:var(--ok);color:#fff;font:700 13px/22px var(--f-ui);text-align:center;box-shadow:0 0 0 2px var(--surface)}
+.node.activity.done{background:var(--ok-soft)}
+.node.gate.done svg polygon,.node.decision.done svg polygon{stroke:var(--ok)}
+.node.locked{opacity:.42}
+.node.current{box-shadow:0 0 0 3px var(--now)}
+.node.gate.current,.node.decision.current{box-shadow:none}
+.node.gate.current svg polygon,.node.decision.current svg polygon{stroke:var(--now);stroke-width:3}
+.node.current::before{content:"NEXT";position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--now);color:#fff;font:700 10px/1 var(--f-head);letter-spacing:.1em;padding:4px 7px;border-radius:99px}
+@media (prefers-reduced-motion:no-preference){.node.current{animation:pulse 1.8s ease-in-out infinite}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px var(--now-soft)}}
+.node.gate.current,.node.decision.current{animation:none}
+.edge.ok{stroke:var(--ok);stroke-width:2}
+.pill{display:inline-block;font:700 11px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border-radius:99px}
+.pill.done{background:var(--ok-soft);color:var(--ok)}.pill.now{background:var(--now-soft);color:var(--now)}.pill.lock{background:var(--line);color:var(--muted)}
+.notebox{width:100%;margin-top:12px;font:14px var(--f-ui);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:64px;resize:vertical}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.hint{color:var(--muted);font-size:13px}
+.legend .st{display:inline-block;width:12px;height:12px;border-radius:50%;margin:0 11px}
+@media (prefers-reduced-motion:no-preference){.board-wrap{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">PATC-CS-M-001 · TPDM · Training Development</div>
+      <h1 id="title">1 · New training package (TPDM 3.1, full ADDIE)</h1>
+      <div class="src" id="src">Source: PATC-CS-M-001 Training Program Development Manual, ISS 01 REV 00, EFF 13 AUG 2026 · Read left to right</div>
+      <div class="fnote" id="fnote" hidden></div>
+    </div>
+    <div class="seg" role="group" aria-label="Development type">
+      <button id="m-new" data-mode="new-dev" aria-pressed="true">New Dev</button>
+      <button id="m-mod" data-mode="mod-dev" aria-pressed="false">Mod Dev</button>
+      <button id="m-dev" data-mode="mod-revise" aria-pressed="false">Mod Revise</button>
+    </div>
+  </header>
+
+  <section class="coursebar" aria-label="Course progress">
+    <div class="cfields">
+      <label for="course">Course</label>
+      <select id="course"></select>
+      <input id="cname" type="text" placeholder="Course name or code" aria-label="Course name">
+      <button class="btn" id="cadd">+ New course</button>
+      <button class="btn" id="cdel">Delete</button>
+      <button class="btn" id="cexp">Export</button>
+      <button class="btn" id="cimp">Import</button>
+      <input type="file" id="cfile" accept="application/json" hidden>
+    </div>
+    <div class="prog">
+      <div class="progtop"><span><strong id="pcount">0 / 0</strong> steps complete</span><span class="hint" id="pmode"></span></div>
+      <div class="bar" id="pbar"></div>
+      <div class="nextline" id="pnext"></div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="chips" id="chips" aria-label="Jump to phase"></div>
+    <div class="zoom" aria-label="Zoom">
+      <button id="zout" aria-label="Zoom out">−</button>
+      <output id="zval">100%</output>
+      <button id="zin" aria-label="Zoom in">+</button>
+    </div>
+  </div>
+
+  <div class="board-wrap" id="bw"><div class="board" id="board"></div></div>
+
+  <div class="below">
+    <section class="panel" id="detail" aria-live="polite"></section>
+    <section class="panel">
+      <h2>Legend</h2>
+      <ul class="legend">
+        <li><svg class="sw" viewBox="0 0 34 20"><rect x="1" y="1" width="32" height="18" rx="4" fill="var(--surface)" stroke="var(--act-bd)" stroke-width="1.4"/></svg>Rounded box = activity</li>
+        <li><svg class="sw" viewBox="0 0 34 20"><polygon points="6,1 28,1 33,10 28,19 6,19 1,10" fill="var(--gate-bg)" stroke="var(--gate-bd)" stroke-width="1.4"/></svg>Hexagon = quality-gate checklist / form</li>
+        <li><svg class="sw" viewBox="0 0 34 20"><rect x="1" y="1" width="32" height="18" rx="5" fill="var(--sign-bg)" stroke="var(--sign-bd)" stroke-width="2"/></svg>Yellow box = sign-off / approval</li>
+        <li><svg class="sw" viewBox="0 0 34 20"><polygon points="17,1 33,10 17,19 1,10" fill="var(--surface)" stroke="var(--edge)" stroke-width="1.4"/></svg>Diamond = decision</li>
+        <li><svg class="sw" viewBox="0 0 34 20"><rect x="1" y="1" width="32" height="18" rx="9" fill="var(--term-bg)"/></svg>Dark box = start / end</li>
+        <li><svg class="sw" viewBox="0 0 34 20"><rect x="1" y="1" width="32" height="18" fill="var(--note-bg)" stroke="var(--muted)" stroke-dasharray="3 2"/></svg>Dashed box = note</li>
+        <li><span class="st" style="background:var(--ok)"></span>Green tick = step complete</li>
+        <li><svg class="sw" viewBox="0 0 34 20"><rect x="1" y="4" width="32" height="12" rx="6" fill="var(--surface)" stroke="var(--sign-bd)"/><rect x="5" y="7" width="6" height="6" rx="1" fill="none" stroke="var(--fg)"/></svg>Tick box under a sign-off = approver has signed</li>
+        <li><span class="st" style="background:var(--now)"></span>Orange ring = next step to do</li>
+        <li><span class="st" style="background:var(--line)"></span>Faded = waiting on earlier steps</li>
+      </ul>
+    </section>
+    <section class="panel">
+      <h2>Forms (PATC-CS-F-xxx or approved equivalent)</h2>
+      <ul class="forms" id="forms"></ul>
+    </section>
+  </div>
+</div>
+
+<script>
+const FORMS={"F-071":"Training Program Risk Assessment","F-072":"CBTA Design Framework","F-073":"Quality Gate 1 ANALYSE","F-074":"Quality Gate 2 DESIGN","F-075":"Quality Gate 3 DEVELOP","F-076":"CBTA Operational Release Approval","F-077":"CBTA Program Evaluation Report"};
+const LANES=[
+ {id:"cd",name:"Course Developer"},{id:"sme",name:"SME / Qualified Instructor"},{id:"dm",name:"Division Manager"},
+ {id:"am",name:"Accountable Manager"},{id:"cs",name:"Compliance & Safety Division"},{id:"ta",name:"Training Admin / Instructor / Assessor"}];
+
+/* Each flow: phases [label, colorVar, firstCol, lastCol]; nodes [id, col, lane, type, title, sub]; edges [from, to, opts] */
+const FLOWS={
+ "new-dev":{
+  title:"1 · New training package (TPDM 3.1, full ADDIE)",
+  src:"Source: PATC-CS-M-001 Training Program Development Manual, ISS 01 REV 00, EFF 13 AUG 2026 · Read left to right",
+  phases:[["Start","--ph-start",0,1],["Phase 1 · Analyse","--ph-1",2,9],["Phase 2 · Design","--ph-2",10,14],["Phase 3 · Develop","--ph-3",15,19],["Ch.5 · Test & Release","--ph-5t",20,28],["Phase 4 · Implement","--ph-4",29,31],["Phase 5 · Evaluate","--ph-5",32,36]],
+  nodes:[
+   ["start",0,"cd","terminal","Need identified","New role / equipment / no fitting material (3.1) · Dev + Training Manager"],
+   ["alloc",1,"dm","sign","Allocate resources & project plan","(3.1.2)"],
+   ["d11",2,"cd","activity","1-1 Data collection","Job role, regulatory, operational, technical, target population · F-072"],
+   ["d116",3,"cd","gate","1-1-6 Program Risk Assessment","F-071 → HIGH / MOD / LOW"],
+   ["a071",4,"dm","sign","Approve F-071",""],
+   ["d12",5,"sme","activity","1-2 Task & competency analysis","With Developer: MF, SA, KSA, proficiency"],
+   ["d13",6,"cd","activity","1-3 Training Specification","F-072 Competency Mapping Matrix"],
+   ["qg1s",7,"cd","gate","QG1 self-check","F-073"],
+   ["tv1",8,"sme","activity","Technical validation","Validator ≠ Developer"],
+   ["qg1",9,"dm","sign","QG1 sign-off","New / high-risk course"],
+   ["d21",10,"cd","activity","2-1 Assessment Plan (first)","OSC, checkpoints, tools, pass marks · F-072"],
+   ["d22",11,"cd","activity","2-2 Training Plan + 2-3 Remedial","Modules, footprint, methods; washout · F-072"],
+   ["qg2s",12,"cd","gate","QG2 self-check","F-074"],
+   ["tv2",13,"sme","activity","Technical validation","Feasibility & realism"],
+   ["qg2",14,"dm","sign","QG2 sign-off","Mandatory for all types"],
+   ["d31",15,"cd","activity","3-1 / 3-2 Materials","Trainee & instructor materials; secure assessment items"],
+   ["d33",16,"cd","activity","3-3 / 3-4 Templates & control","PATC-[Div]-[T/A]-[No], REV / EFF, Master List"],
+   ["qg3s",17,"cd","gate","QG3 self-check","F-075"],
+   ["tv3",18,"sme","activity","Technical validation","Data & references"],
+   ["qg3",19,"dm","sign","QG3 structural verification","→ “Approved Draft”"],
+   ["c51",20,"cd","activity","5.1 Consolidate package","All Phase 1–3 sign-offs"],
+   ["pre",21,"am","sign","Preliminary Authorization","High-level review (5.1)"],
+   ["dec",22,"cd","decision","Validation method?","(5.2)"],
+   ["c52",23,"ta","activity","5.2 Trial Course / First Live","Record actual time per module"],
+   ["obs",23,"cs","activity","Independent observer","SME / QI / Compliance (first live only)"],
+   ["c53",24,"ta","activity","5.3 Assessment validation","Item analysis, inter-rater calibration (≥2 assessors)"],
+   ["c55",25,"cd","activity","5.5 Verification Package","+ signed Final Verification Statement"],
+   ["f76s",26,"cd","gate","F-076 self-check","with Division Manager"],
+   ["f76e",27,"dm","sign","F-076 Division endorsement",""],
+   ["f76a",28,"am","sign","F-076 Final approval","REV / EFF assigned → “Approved Master”"],
+   ["i41",29,"ta","activity","4-1 Pre-training verification","Instructor authorization, trainee prerequisites, prep 48 h"],
+   ["i42",30,"ta","activity","4-2 Deliver training","Follow Instructor Guide; formative checks"],
+   ["i43",31,"ta","activity","4-3 Summative assessment","Grade ≤24 h · NYC → RCA + Remedial Action Log"],
+   ["e51",32,"cd","activity","5-1 Collect evaluation data","F-071 interval: 12 / 24 / 36 months"],
+   ["e52",33,"sme","activity","5-2 Root Cause Analysis","with Developer + DM: P1/2, P3, P4 gap"],
+   ["e53",34,"cd","gate","5-3 F-077 Report + CAP",""],
+   ["cap",35,"dm","sign","Sign CAP closure","F-077"],
+   ["end",36,"cd","terminal","Re-enter ADDIE at gap phase","→ page 3 “Revise approved”"],
+   ["audit",36,"cs","note","Audit anytime","Approved programs & Verification Packages"]
+  ],
+  edges:[["start","alloc"],["alloc","d11"],["d11","d116"],["d116","a071"],["a071","d12"],["d12","d13"],["d13","qg1s"],["qg1s","tv1"],["tv1","qg1"],["qg1","d21"],
+   ["d21","d22"],["d22","qg2s"],["qg2s","tv2"],["tv2","qg2"],["qg2","d31"],["d31","d33"],["d33","qg3s"],["qg3s","tv3"],["tv3","qg3"],["qg3","c51"],
+   ["c51","pre"],["pre","dec"],["dec","c52",{label:"Trial / First live"}],["c52","obs",{up:true,dash:true,label:"first live only"}],["c52","c53"],["c53","c55"],["c55","f76s"],["f76s","f76e"],["f76e","f76a"],["f76a","i41"],
+   ["i41","i42"],["i42","i43"],["i43","e51"],["e51","e52"],["e52","e53"],["e53","cap"],["cap","end"]]
+ },
+ "mod-dev":{
+  title:"2 · Modified: upgrade an existing course to CBTA (TPDM 3.2)",
+  src:"Source: PATC-CS-M-001 Training Program Development Manual, ISS 01 REV 00, EFF 13 AUG 2026 · Read left to right",
+  phases:[["Start","--ph-start",0,0],["Phase 1 · Analyse","--ph-1",1,5],["Phase 2 · Design","--ph-2",6,9],["Phase 3 · Develop","--ph-3",10,14],["Ch.5 · Test & Release","--ph-5t",15,23],["Phase 4 · Implement","--ph-4",24,26],["Phase 5 · Evaluate","--ph-5",27,31]],
+  nodes:[
+   ["start",0,"cd","terminal","Existing time-based course","Dev + Training Manager select “Upgrading” (3.2)"],
+   ["ext",1,"sme","activity","Competency extraction (3.2.1)","With Developer: syllabus → MF / SA, cut nice-to-know · F-072"],
+   ["n071",1,"cs","note","Confirm F-071 need","3.2 is silent; Phase 5 needs an interval"],
+   ["d13",2,"cd","activity","1-3 Training Specification","F-072"],
+   ["qg1s",3,"cd","gate","QG1 self-check","F-073"],
+   ["tv1",4,"sme","activity","Technical validation","Validator ≠ Developer"],
+   ["qg1",5,"dm","sign","QG1 sign-off","Upgraded = new CBTA course (3.2.4)"],
+   ["rest",6,"cd","activity","Curriculum restructuring (3.2.2)","Modules by objective, OSC tools, remedial & washout · F-072"],
+   ["qg2s",7,"cd","gate","QG2 self-check","F-074"],
+   ["tv2",8,"sme","activity","Technical validation","Feasibility & realism"],
+   ["qg2",9,"dm","sign","QG2 sign-off","Mandatory"],
+   ["reuse",10,"cd","activity","Review & reuse (3.2.3)","“If it works well, do not change it”; write Instructor Guide"],
+   ["refmt",11,"cd","activity","Reformat & control","Templates, codes, REV / EFF, assessment items"],
+   ["qg3s",12,"cd","gate","QG3 self-check","F-075"],
+   ["tv3",13,"sme","activity","Technical validation","Data & references"],
+   ["qg3",14,"dm","sign","QG3 structural verification","→ “Approved Draft”"],
+   ["c51",15,"cd","activity","5.1 Consolidate package","All Phase 1–3 sign-offs"],
+   ["nexm",15,"cs","note","No exemption","Full validation required (3.2.4)"],
+   ["pre",16,"am","sign","Preliminary Authorization","High-level review (5.1)"],
+   ["dec",17,"cd","decision","Validation method?","(5.2)"],
+   ["c52",18,"ta","activity","5.2 Trial Course / First Live","Record actual time per module"],
+   ["obs",18,"cs","activity","Independent observer","SME / QI / Compliance (first live only)"],
+   ["c53",19,"ta","activity","5.3 Assessment validation","Item analysis, inter-rater calibration (≥2 assessors)"],
+   ["c55",20,"cd","activity","5.5 Verification Package","+ signed Final Verification Statement"],
+   ["f76s",21,"cd","gate","F-076 self-check","with Division Manager"],
+   ["f76e",22,"dm","sign","F-076 Division endorsement",""],
+   ["f76a",23,"am","sign","F-076 Final approval","REV / EFF assigned → “Approved Master”"],
+   ["i41",24,"ta","activity","4-1 Pre-training verification","Instructor authorization, trainee prerequisites, prep 48 h"],
+   ["i42",25,"ta","activity","4-2 Deliver training","Follow Instructor Guide; formative checks"],
+   ["i43",26,"ta","activity","4-3 Summative assessment","Grade ≤24 h · NYC → RCA + Remedial Action Log"],
+   ["e51",27,"cd","activity","5-1 Collect evaluation data","F-071 interval: 12 / 24 / 36 months"],
+   ["e52",28,"sme","activity","5-2 Root Cause Analysis","with Developer + DM: P1/2, P3, P4 gap"],
+   ["e53",29,"cd","gate","5-3 F-077 Report + CAP",""],
+   ["cap",30,"dm","sign","Sign CAP closure","F-077"],
+   ["end",31,"cd","terminal","Re-enter ADDIE at gap phase","→ page 3 “Revise approved”"],
+   ["audit",31,"cs","note","Audit anytime","Approved programs & Verification Packages"]
+  ],
+  edges:[["start","ext"],["ext","d13"],["d13","qg1s"],["qg1s","tv1"],["tv1","qg1"],["qg1","rest"],["rest","qg2s"],["qg2s","tv2"],["tv2","qg2"],
+   ["qg2","reuse"],["reuse","refmt"],["refmt","qg3s"],["qg3s","tv3"],["tv3","qg3"],["qg3","c51"],
+   ["c51","pre"],["pre","dec"],["dec","c52",{label:"Trial / First live"}],["c52","obs",{up:true,dash:true,label:"first live only"}],["c52","c53"],["c53","c55"],["c55","f76s"],["f76s","f76e"],["f76e","f76a"],["f76a","i41"],
+   ["i41","i42"],["i42","i43"],["i43","e51"],["e51","e52"],["e52","e53"],["e53","cap"],["cap","end"]]
+ },
+ "mod-revise":{
+  title:"3 · Modified: revise an approved CBTA course (TPDM 1.4, 4.5.4, 5.4)",
+  src:"Source: PATC-CS-M-001 Training Program Development Manual, ISS 01 REV 00, EFF 13 AUG 2026 · Read left to right",
+  note:"Blue lines = jump straight to the phase that has the gap. Re-enter only at that phase; full return to Phase 1 only if regulations or operational requirements fundamentally changed.",
+  band:64,
+  phases:[["Start","--ph-start",0,4],["Phase 1 · Analyse","--ph-1",5,8],["Phase 2 · Design","--ph-2",9,12],["Phase 3 · Develop","--ph-3",13,16],["Ch.5 · Test & Release","--ph-5t",17,24],["Phase 4 · Implement","--ph-4",25,27],["Phase 5 · Evaluate","--ph-5",28,32]],
+  nodes:[
+   ["start",0,"cd","terminal","Change trigger","Regulation, safety data, ops / tech change, or Phase 5 CAP"],
+   ["gap",1,"cd","activity","Gap Analysis","Mandatory (1.4)"],
+   ["safe",2,"cd","decision","Safety-significant?",""],
+   ["admin",3,"cd","activity","Admin / minor","No HIRA; standard document revision"],
+   ["hira",3,"cs","activity","HIRA with C&S","OMM 4.3 · sets revision scope"],
+   ["which",4,"cd","decision","Gap in which phase?",""],
+   ["upd",5,"cd","activity","Update affected analysis","MF / SA / KSA / proficiency; re-check F-071 · F-072"],
+   ["qg1s",6,"cd","gate","QG1 self-check","F-073"],
+   ["tv1",7,"sme","activity","Technical validation","Validator ≠ Developer"],
+   ["qg1",8,"dm","sign","QG1 sign-off","High-risk: now · Minor / recurrent: defer to F-076"],
+   ["rev",9,"cd","activity","Revise plan elements","Criteria, tools, pass marks, modules · F-072"],
+   ["qg2s",10,"cd","gate","QG2 self-check","F-074"],
+   ["tv2",11,"sme","activity","Technical validation","Feasibility & realism"],
+   ["qg2",12,"dm","sign","QG2 sign-off","Mandatory"],
+   ["mat",13,"cd","activity","Update materials","New REV / EFF; Master List updated"],
+   ["qg3s",14,"cd","gate","QG3 self-check","F-075"],
+   ["tv3",15,"sme","activity","Technical validation","Data & references"],
+   ["qg3",16,"dm","sign","QG3 structural verification","→ “Approved Draft”"],
+   ["c51",17,"cd","activity","5.1 Consolidate package",""],
+   ["pre",18,"am","sign","Preliminary Authorization",""],
+   ["exm",19,"cd","decision","Exempt? (5.4)","minor / recurrent / urgent / 3rd-party / awareness"],
+   ["apx",20,"dm","sign","Approve exemption","DM + AM sign justification"],
+   ["val",20,"ta","activity","5.2 / 5.3 Validation","Trial or first live + assessment validation"],
+   ["c55",21,"cd","activity","5.5 Verification Package","+ Final Verification Statement"],
+   ["f76s",22,"cd","gate","F-076 self-check","with Division Manager"],
+   ["f76e",23,"dm","sign","F-076 Division endorsement","+ retrospective QG1 if deferred"],
+   ["f76a",24,"am","sign","F-076 Final approval","New REV / EFF released"],
+   ["i41",25,"ta","activity","4-1 Pre-training verification","Instructor authorization, trainee prerequisites, prep 48 h"],
+   ["i42",26,"ta","activity","4-2 Deliver training","Follow Instructor Guide; formative checks"],
+   ["i43",27,"ta","activity","4-3 Summative assessment","Grade ≤24 h · NYC → RCA + Remedial Action Log"],
+   ["e51",28,"cd","activity","5-1 Collect evaluation data","F-071 interval: 12 / 24 / 36 months"],
+   ["e52",29,"sme","activity","5-2 Root Cause Analysis","with Developer + DM: P1/2, P3, P4 gap"],
+   ["e53",30,"cd","gate","5-3 F-077 Report + CAP",""],
+   ["cap",31,"dm","sign","Sign CAP closure","F-077"],
+   ["end",32,"cd","terminal","Re-enter ADDIE at gap phase","→ page 3 “Revise approved”"],
+   ["audit",32,"cs","note","Audit anytime","Approved programs & Verification Packages"]
+  ],
+  edges:[["start","gap"],["gap","safe"],["safe","admin",{opt:"No",label:"No"}],["safe","hira",{opt:"Yes",label:"Yes"}],["admin","which"],["hira","which"],
+   ["which","upd",{opt:"Phase 1",label:"Phase 1"}],["which","rev",{opt:"Phase 2",label:"Phase 2",jump:1}],["which","mat",{opt:"Phase 3",label:"Phase 3",jump:2}],
+   ["upd","qg1s"],["qg1s","tv1"],["tv1","qg1"],["qg1","rev"],["rev","qg2s"],["qg2s","tv2"],["tv2","qg2"],["qg2","mat"],["mat","qg3s"],["qg3s","tv3"],["tv3","qg3"],["qg3","c51"],
+   ["c51","pre"],["pre","exm"],["exm","apx",{opt:"Yes",label:"Yes"}],["exm","val",{opt:"No",label:"No"}],["apx","c55"],["val","c55"],["c55","f76s"],["f76s","f76e"],["f76e","f76a"],["f76a","i41"],
+   ["i41","i42"],["i42","i43"],["i43","e51"],["e51","e52"],["e52","e53"],["e53","cap"],["cap","end"]]
+ }
+};
+
+const OPTIONAL=new Set(["obs"]); // observer only needed on first live
+const LW=150, CW=184, NW=156, NH=78, LH=124, PH=40;
+const $=s=>document.querySelector(s);
+const board=$("#board"), bw=$("#bw");
+let mode="new-dev", sel=null, zoom=1;
+
+/* ---------- saved progress (this browser) ---------- */
+const KEY="tpdm-progress-v1";
+let store=load();
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&Array.isArray(v.courses)&&v.courses.length)return v}catch(e){}
+  return {current:"c1",courses:[{id:"c1",name:"Example course",done:{}}]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+function course(){return store.courses.find(c=>c.id===store.current)||store.courses[0]}
+function doneMap(){const c=course();c.done[mode]=c.done[mode]||{};return c.done[mode]}
+function apprMap(){const c=course();c.appr=c.appr||{};c.appr[mode]=c.appr[mode]||{};return c.appr[mode]}
+const ABBR={"Division Manager":"DM","Accountable Manager":"AM","Course Developer":"Dev"};
+const APPROVER_OVERRIDE={apx:["Division Manager","Accountable Manager"]};
+function approvers(n){if(n[3]!=="sign")return [];return APPROVER_OVERRIDE[n[0]]||[LANES[laneIdx(n[2])].name]}
+function pendingApprovers(n){const A=apprMap()[n[0]]||{};return approvers(n).filter(r=>!A[r])}
+function goNext(from){const nx=nextSteps().filter(x=>succs(from).includes(x[0])&&!OPTIONAL.has(x[0]))[0]||nextSteps().filter(x=>!OPTIONAL.has(x[0]))[0];
+  drawOverlay();renderProgress(); if(nx)select(nx[0],true); else {select(from)}}
+function toggleAppr(id,role,on){
+  const n=FLOWS[mode].nodes.find(x=>x[0]===id), d=doneMap(), A=apprMap(); A[id]=A[id]||{};
+  const st=status(id);
+  if(on){ if(st!=="now")return;
+    const nm=document.getElementById("apn-"+id+"-"+(ABBR[role]||role));
+    A[id][role]={at:new Date().toISOString(),name:nm?nm.value.trim():""};
+    if(approvers(n).every(r=>A[id][r])){d[id]={at:new Date().toISOString(),note:"",signed:true};save();goNext(id);return}
+  } else {
+    if(succs(id).some(x=>d[x]))return;
+    delete A[id][role]; delete d[id];
+  }
+  save();drawOverlay();renderProgress();if(sel===id)renderDetail();
+}
+
+/* ---------- graph helpers ---------- */
+function laneIdx(id){return LANES.findIndex(l=>l.id===id)}
+function BAND(){return FLOWS[mode].band||0}
+function TOP(){return PH+BAND()}
+function nodeBox(n){const x=LW+n[1]*CW+(CW-NW)/2, y=TOP()+laneIdx(n[2])*LH+(LH-NH)/2;return {x,y,w:NW,h:NH}}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function opts(id){return FLOWS[mode].edges.filter(e=>e[0]===id&&e[2]&&e[2].opt).map(e=>e[2].opt)}
+function active(e){const d=doneMap(),o=e[2]||{};if(!o.opt)return true;const r=d[e[0]];return !r||!r.choice||r.choice===o.opt}
+function reach(){const f=FLOWS[mode],R=new Set(),q=f.nodes.filter(n=>trackable(n)&&!f.edges.some(e=>e[1]===n[0])).map(n=>n[0]);
+  while(q.length){const id=q.shift();if(R.has(id))continue;R.add(id);f.edges.forEach(e=>{if(e[0]===id&&active(e))q.push(e[1])})}return R}
+function preds(id){const R=reach();return FLOWS[mode].edges.filter(e=>e[1]===id&&active(e)&&R.has(e[0])).map(e=>e[0])}
+function succs(id){return FLOWS[mode].edges.filter(e=>e[0]===id&&active(e)).map(e=>e[1])}
+function trackable(n){return n[3]!=="note"}
+function status(id){const d=doneMap();if(!reach().has(id))return "skip";if(d[id])return "done";return preds(id).every(p=>d[p])?"now":"lock"}
+function required(){const R=reach();return FLOWS[mode].nodes.filter(n=>trackable(n)&&!OPTIONAL.has(n[0])&&R.has(n[0]))}
+function nextSteps(){return FLOWS[mode].nodes.filter(n=>trackable(n)&&status(n[0])==="now")}
+function fmtDate(iso){try{return new Date(iso).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}catch(e){return iso}}
+
+/* ---------- board ---------- */
+function render(){
+  const f=FLOWS[mode];
+  $("#title").textContent=f.title; $("#src").textContent=f.src;
+  const fn=$("#fnote"); fn.hidden=!f.note; fn.textContent=f.note||"";
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===mode));
+  const chips=$("#chips"); chips.innerHTML="";
+  renderCourses();
+  if(f.pending){
+    board.style.width=""; board.style.zoom=1;
+    board.innerHTML=`<div class="empty"><strong>${esc(f.title)}</strong><span>This flow has not been drawn yet. It uses the same six lanes, legend and forms as New Dev.</span></div>`;
+    sel=null; renderDetail(); renderProgress(); return;
+  }
+  const cols=Math.max(...f.nodes.map(n=>n[1]))+1, W=LW+cols*CW, H=TOP()+LANES.length*LH;
+  board.style.setProperty("--lw",LW+"px"); board.style.width=W+"px"; board.style.zoom=zoom;
+  let h=`<div class="phrow"><div class="corner"></div>`;
+  f.phases.forEach(p=>{h+=`<div class="ph" style="width:${(p[3]-p[2]+1)*CW}px;background:var(${p[1]})">${esc(p[0])}</div>`});
+  h+=`</div>`;
+  if(BAND())h+=`<div class="bandrow" style="height:${BAND()}px"><div class="lane-label">Phase jumps</div><div style="width:${cols*CW}px"></div></div>`;
+  LANES.forEach(l=>{h+=`<div class="lane" style="height:${LH}px;--lbg:var(--ln-${l.id});--lb:var(--ln-${l.id}-b,var(--line))"><div class="lane-label">${esc(l.name)}</div><div class="lane-track" style="width:${cols*CW}px"></div></div>`});
+  h+=`<div class="overlay" id="overlay" style="width:${W}px;height:${H}px"></div>`;
+  board.innerHTML=h;
+  f.phases.forEach(p=>{const c=document.createElement("button");c.className="chip";c.textContent=p[0];c.style.background=`var(${p[1]})`;
+    c.onclick=()=>{bw.scrollLeft=(p[2]*CW)*zoom};chips.appendChild(c)});
+  if(!sel||!f.nodes.some(n=>n[0]===sel)){const nx=nextSteps()[0];sel=nx?nx[0]:f.nodes[0][0]}
+  drawOverlay(); renderDetail(); renderProgress();
+}
+
+function drawOverlay(){
+  const f=FLOWS[mode], ov=$("#overlay"); if(!ov)return;
+  const cols=Math.max(...f.nodes.map(n=>n[1]))+1, W=LW+cols*CW, H=TOP()+LANES.length*LH, d=doneMap(), R=reach();
+  const byId=Object.fromEntries(f.nodes.map(n=>[n[0],n]));
+  let svg=`<svg class="edges" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>
+   <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--edge)"/></marker>
+   <marker id="arok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ok)"/></marker>
+   <marker id="arj" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--jump)"/></marker></defs>`;
+  f.phases.slice(1).forEach(p=>{const x=LW+p[2]*CW;svg+=`<line class="divider" x1="${x}" y1="${PH}" x2="${x}" y2="${H}"/>`});
+  f.edges.forEach(([a,b,o={}])=>{
+    const A=nodeBox(byId[a]),B=nodeBox(byId[b]);let p,lx,ly;
+    if(o.jump){const sx=A.x+A.w/2,ty=B.y,tx=B.x+B.w/2,y=PH+14+(o.jump-1)*24,r=6;
+      p=`M${sx} ${A.y} V${y+r} Q${sx} ${y} ${sx+r} ${y} H${tx-r} Q${tx} ${y} ${tx} ${y+r} V${ty-1}`;lx=sx+(tx-sx)*(o.jump===1?.35:.2);ly=y+4}
+    else if(o.up){const x=A.x+A.w/2;p=`M${x} ${A.y} V${B.y+B.h}`;lx=x;ly=(A.y+B.y+B.h)/2+4}
+    else{const sx=A.x+A.w,sy=A.y+A.h/2,tx=B.x,ty=B.y+B.h/2;
+      if(sy===ty){p=`M${sx} ${sy} H${tx-1}`;lx=(sx+tx)/2;ly=sy-7}
+      else{const mx=tx-12,r=6,dir=ty>sy?1:-1;p=`M${sx} ${sy} H${mx-r} Q${mx} ${sy} ${mx} ${sy+dir*r} V${ty-dir*r} Q${mx} ${ty} ${mx+r} ${ty} H${tx-1}`;lx=mx;ly=(sy+ty)/2}}
+    const e=[a,b,o], on=active(e)&&R.has(a), ok=on&&d[a]&&d[b];
+    svg+=`<path class="edge${o.dash?" dash":""}${o.jump?" jump":""}${ok?" ok":""}${on?"":" off"}" d="${p}" marker-end="url(#${ok?"arok":o.jump?"arj":"ar"})"/>`;
+    if(o.label)svg+=`<text class="elabel${on?"":" off"}" x="${lx}" y="${ly}" text-anchor="middle">${esc(o.label)}</text>`;
+  });
+  svg+=`</svg>`;
+  let nodes="";
+  f.nodes.forEach(n=>{const b=nodeBox(n);let shape="";
+    if(n[3]==="gate")shape=`<svg class="shape" viewBox="0 0 ${b.w} ${b.h}" preserveAspectRatio="none"><polygon points="12,1 ${b.w-12},1 ${b.w-1},${b.h/2} ${b.w-12},${b.h-1} 12,${b.h-1} 1,${b.h/2}"/></svg>`;
+    if(n[3]==="decision")shape=`<svg class="shape" viewBox="0 0 ${b.w} ${b.h}" preserveAspectRatio="none"><polygon points="${b.w/2},1 ${b.w-1},${b.h/2} ${b.w/2},${b.h-1} 1,${b.h/2}"/></svg>`;
+    const st=trackable(n)?status(n[0]):"";
+    const cls=st==="done"?" done":st==="now"?" current":st==="lock"?" locked":st==="skip"?" skipped":"";
+    nodes+=`<button class="node ${n[3]}${cls}" data-id="${n[0]}" aria-pressed="${sel===n[0]}" aria-label="${esc(n[4])}${st==="done"?" (complete)":st==="now"?" (next step)":st==="skip"?" (not on this path)":""}" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;isolation:isolate">${shape}<b>${esc(n[4])}</b>${n[5]?`<span class="sub">${esc(n[5])}</span>`:""}</button>`});
+  const AP=apprMap();
+  f.nodes.forEach(n=>{const ap=approvers(n);if(!ap.length)return;const b=nodeBox(n),st=status(n[0]),A=AP[n[0]]||{};
+    const blocked=st==="done"&&succs(n[0]).some(x=>d[x]);
+    const dis=st==="lock"||st==="skip"||blocked;
+    nodes+=`<div class="apv" style="left:${b.x-10}px;top:${b.y+b.h+4}px;width:${b.w+20}px">`+ap.map(r=>{const ab=ABBR[r]||r,on=!!A[r];
+      return `<label class="ap${on?" on":""}${dis?" dis":""}" title="${esc(r)}${on&&A[r].name?" · "+esc(A[r].name):""}${on?" · "+fmtDate(A[r].at):""}"><input type="checkbox" data-ap="${n[0]}" data-role="${esc(r)}" ${on?"checked":""} ${dis?"disabled":""}>${esc(ab)} approved</label>`}).join("")+`</div>`});
+  ov.innerHTML=svg+nodes;
+  ov.querySelectorAll(".node").forEach(el=>el.onclick=()=>select(el.dataset.id));
+  ov.querySelectorAll("[data-ap]").forEach(cb=>cb.onchange=()=>{select(cb.dataset.ap);toggleAppr(cb.dataset.ap,cb.dataset.role,cb.checked)});
+}
+
+function select(id,scroll){sel=id;document.querySelectorAll("#overlay .node").forEach(el=>el.setAttribute("aria-pressed",el.dataset.id===id));renderDetail();
+  if(scroll){const n=FLOWS[mode].nodes.find(x=>x[0]===id),b=nodeBox(n);bw.scrollLeft=(b.x-bw.clientWidth/zoom/2+b.w/2)*zoom}}
+
+/* ---------- progress summary ---------- */
+function renderProgress(){
+  const f=FLOWS[mode];
+  $("#pmode").textContent=f.pending?"":course().name+" · "+f.title.split("·")[1].trim();
+  if(f.pending){$("#pcount").textContent="–";$("#pbar").innerHTML="";$("#pnext").innerHTML=`<span class="hint">No flow to track yet.</span>`;return}
+  const req=required(), d=doneMap(), done=req.filter(n=>d[n[0]]).length;
+  $("#pcount").textContent=`${done} / ${req.length}`;
+  // bar split by phase colour
+  $("#pbar").innerHTML=f.phases.map(p=>{const inP=req.filter(n=>n[1]>=p[2]&&n[1]<=p[3]),dn=inP.filter(n=>d[n[0]]).length;
+    return `<span title="${esc(p[0])}: ${dn}/${inP.length}" style="width:${dn/req.length*100}%;background:var(${p[1]})"></span>`}).join("");
+  const nx=nextSteps().filter(n=>!OPTIONAL.has(n[0]));
+  const el=$("#pnext");
+  if(done===req.length){el.innerHTML=`<span class="pill done">Process complete</span><span class="hint">All steps signed off for this course.</span>`;return}
+  el.innerHTML=`<span class="tag">Next</span>`+nx.map(n=>{const pa=pendingApprovers(n);
+    return pa.length?`<button class="btn apbtn" data-go="${n[0]}"><span class="aptag">Approval</span>${esc(n[4])} · waiting for ${pa.map(esc).join(" + ")}</button>`
+    :`<button class="btn" data-go="${n[0]}">${esc(n[4])} · ${esc(LANES[laneIdx(n[2])].name)}</button>`}).join("");
+  el.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>select(b.dataset.go,true));
+}
+
+/* ---------- step detail + actions ---------- */
+function renderDetail(){
+  const f=FLOWS[mode], p=$("#detail");
+  if(f.pending||!sel){p.innerHTML=`<h2>Selected step</h2><p class="hint" style="margin:0">Pick a step in the flow to see who owns it and to mark it complete.</p>`;return}
+  const n=f.nodes.find(x=>x[0]===sel), ph=f.phases.find(x=>n[1]>=x[2]&&n[1]<=x[3]);
+  const types={activity:"Activity",gate:"Quality-gate checklist / form",sign:"Sign-off / approval",decision:"Decision",terminal:"Start / end",note:"Note"};
+  const forms=[...new Set(((n[4]+" "+n[5]).match(/F-0\d\d/g)||[]))];
+  const name=id=>f.nodes.find(x=>x[0]===id)[4];
+  const into=FLOWS[mode].edges.filter(e=>e[1]===sel).map(e=>e[0]), out=FLOWS[mode].edges.filter(e=>e[0]===sel).map(e=>e[1]), d=doneMap(), rec=d[sel], op=opts(sel);
+  const st=trackable(n)?status(sel):null;
+  const pill=st==="done"?`<span class="pill done">${rec.choice?esc(rec.choice)+" · ":"Complete · "}${fmtDate(rec.at)}</span>`:st==="skip"?`<span class="pill skip">Not on this path</span>`:st==="now"?`<span class="pill now">${approvers(n).length?"Awaiting approval":"Ready to do"}</span>`:st==="lock"?`<span class="pill lock">Waiting</span>`:"";
+  let act="";
+  const ap=approvers(n), A=apprMap()[sel]||{};
+  const apUI=()=>{const blocked=st==="done"&&out.some(x=>d[x]);
+    return `<div class="aplist"><div class="hint">Approvals required</div>`+ap.map(r=>{const ab=ABBR[r]||r,on=!!A[r];
+      return `<div class="aprow${on?" on":""}"><label><input type="checkbox" data-dap="${esc(r)}" ${on?"checked":""} ${blocked?"disabled":""}><span><b>${esc(r)}</b></span></label>
+      ${on?`<span class="hint">${A[r].name?esc(A[r].name)+" · ":""}${fmtDate(A[r].at)}</span>`:`<input type="text" class="apname" id="apn-${sel}-${esc(ab)}" placeholder="Signer name (optional)">`}</div>`}).join("")
+      +(blocked?`<div class="hint">Undo the later step first.</div>`:"")+`</div>`};
+  if(ap.length&&(st==="now"||st==="done"))act=apUI();
+  else if(st==="now")act=`<textarea class="notebox" id="note" placeholder="Note (optional): document ref, who signed, comments"></textarea>
+     ${op.length?`<div class="choices"><span class="hint">Choose the answer:</span>${op.map(o=>`<button class="btn" data-choice="${esc(o)}">${esc(o)}</button>`).join("")}</div>`:
+     `<div class="actions"><button class="btn primary" id="markdone">✓ Mark complete</button>`}${OPTIONAL.has(sel)?`<span class="hint">Optional. Only needed for a first live course.</span>`:""}${op.length?"":"</div>"}`;
+  else if(st==="skip")act=`<p class="hint" style="margin:12px 0 0">Skipped by an earlier decision on this course.</p>`;
+  else if(st==="done"){const blocked=out.some(s=>d[s]);
+    act=`${rec.note?`<p style="margin:12px 0 0;white-space:pre-wrap">${esc(rec.note)}</p>`:""}
+     <div class="actions"><button class="btn warn" id="undo" ${blocked?"disabled":""}>Undo complete</button>${blocked?`<span class="hint">Undo the later step first.</span>`:""}</div>`}
+  else if(st==="lock")act=`<p class="hint" style="margin:12px 0 0">Complete first: ${into.filter(x=>!d[x]).map(name).map(esc).join(", ")}</p>`;
+  p.innerHTML=`<h2>Selected step</h2><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between"><p class="detail-title">${esc(n[4])}</p>${pill}</div>${n[5]?`<div style="color:var(--muted);margin-top:4px">${esc(n[5])}</div>`:""}
+   <dl class="kv"><dt>Owner</dt><dd>${esc(LANES[laneIdx(n[2])].name)}</dd><dt>Phase</dt><dd>${esc(ph[0])}</dd><dt>Type</dt><dd>${types[n[3]]}</dd>
+   ${forms.length?`<dt>Forms</dt><dd>${forms.map(c=>`<span class="code">${c}</span> ${esc(FORMS[c])}`).join("<br>")}</dd>`:""}
+   ${into.length?`<dt>From</dt><dd>${into.map(name).map(esc).join(", ")}</dd>`:""}
+   ${out.length?`<dt>Next</dt><dd>${out.map(name).map(esc).join(", ")}</dd>`:""}</dl>${act}`;
+  const complete=(choice)=>{d[sel]={at:new Date().toISOString(),note:($("#note").value||"").trim()};if(choice)d[sel].choice=choice;save();
+    const nx=nextSteps().filter(x=>succs(sel).includes(x[0])&&!OPTIONAL.has(x[0]))[0]||nextSteps().filter(x=>!OPTIONAL.has(x[0]))[0];
+    drawOverlay();renderProgress(); if(nx)select(nx[0],true); else renderDetail()};
+  const md=$("#markdone"); if(md)md.onclick=()=>complete();
+  p.querySelectorAll("[data-choice]").forEach(b=>b.onclick=()=>complete(b.dataset.choice));
+  const ud=$("#undo"); if(ud)ud.onclick=()=>{delete d[sel];save();drawOverlay();renderProgress();renderDetail()};
+  p.querySelectorAll("[data-dap]").forEach(cb=>cb.onchange=()=>toggleAppr(sel,cb.dataset.dap,cb.checked));
+}
+
+/* ---------- courses ---------- */
+let delArm=null;
+function renderCourses(){
+  $("#course").innerHTML=store.courses.map(c=>`<option value="${c.id}" ${c.id===store.current?"selected":""}>${esc(c.name||"Untitled course")}</option>`).join("");
+  $("#cname").value=course().name; $("#cdel").textContent="Delete"; $("#cdel").disabled=store.courses.length<2;
+}
+$("#course").onchange=e=>{store.current=e.target.value;save();sel=null;render()};
+$("#cname").oninput=e=>{course().name=e.target.value;save();const o=$("#course").selectedOptions[0];if(o)o.textContent=e.target.value||"Untitled course";renderProgress()};
+$("#cadd").onclick=()=>{const id="c"+Date.now();store.courses.push({id,name:"New course",done:{}});store.current=id;save();sel=null;render();$("#cname").select()};
+$("#cdel").onclick=()=>{const b=$("#cdel");
+  if(delArm){clearTimeout(delArm);delArm=null;store.courses=store.courses.filter(c=>c.id!==store.current);store.current=store.courses[0].id;save();sel=null;render();return}
+  b.textContent="Click again to delete";delArm=setTimeout(()=>{delArm=null;b.textContent="Delete"},3000)};
+$("#cexp").onclick=()=>{const blob=new Blob([JSON.stringify(store,null,2)],{type:"application/json"});const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="tpdm-progress-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove()};
+$("#cimp").onclick=()=>$("#cfile").click();
+$("#cfile").onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();
+  r.onload=()=>{try{const v=JSON.parse(r.result);if(!Array.isArray(v.courses))throw 0;
+    v.courses.forEach(c=>{const i=store.courses.findIndex(x=>x.id===c.id);if(i>=0)store.courses[i]=c;else store.courses.push(c)});
+    store.current=v.current||store.current;save();sel=null;render()}catch(err){$("#pnext").innerHTML=`<span class="hint" style="color:#c0392b">That file isn't a progress export from this page.</span>`}};
+  r.readAsText(file);e.target.value=""};
+
+/* ---------- mode + zoom ---------- */
+function setMode(m){if(!FLOWS[m])m="new-dev";mode=m;sel=null;render();
+  const nx=nextSteps()[0]; if(nx&&!FLOWS[mode].pending)select(nx[0],true); else bw.scrollLeft=0}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{location.hash=b.dataset.mode});
+window.addEventListener("hashchange",()=>setMode(location.hash.slice(1)));
+const Z=[.5,.6,.7,.8,.9,1,1.15,1.3];
+function setZoom(dl){let i=Z.indexOf(zoom)+dl;i=Math.max(0,Math.min(Z.length-1,i));zoom=Z[i];$("#zval").textContent=Math.round(zoom*100)+"%";if(!FLOWS[mode].pending)board.style.zoom=zoom}
+$("#zin").onclick=()=>setZoom(1);$("#zout").onclick=()=>setZoom(-1);
+$("#forms").innerHTML=Object.entries(FORMS).map(([k,v])=>`<li><span class="code">${k}</span><span>${esc(v)}</span></li>`).join("");
+zoom=window.innerWidth<700?.7:1;$("#zval").textContent=Math.round(zoom*100)+"%";
+setMode(location.hash.slice(1)||"new-dev");
+</script>
+</body>
+</html>
